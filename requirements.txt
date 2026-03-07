@@ -1,1 +1,9 @@
 fastapi[standard]
+cachetools==6.2.6
+openai==1.58.1
+semantic-kernel==0.9.6b1
+tenacity==8.2.3
+langchain-community
+tiktoken
+faiss-cpu
+chainlit
