@@ -43,5 +43,5 @@ async def main(message: cl.Message):
 
     phone = cl.user_session.get("phone_number")
 
-    response = await run(phone, message.content)
+    response,_ = await run(phone, message.content)
     await cl.Message(content=response).send()

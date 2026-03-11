@@ -20,6 +20,13 @@ class ConversationCache:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         return None
 
+    async def push_user_data(self, user_id: str, data: Dict[str, Any]) -> None:
+        """
+        Add arbitrary user data to the cache.
+        """
+        async with self.lock:
+            self.cache[user_id] = data
+
     async def push_message(self, user_id: str, role: str, content: str) -> None:
         """
         Add a single message for a user.
@@ -47,6 +54,14 @@ class ConversationCache:
         """
         async with self.lock:
             return self.cache.get(user_id, []).copy()
+    
+    async def get_user_data(self, user_id: str) -> Dict[str, Any]:
+        """
+        Retrieve user data for a user.
+        Returns empty dict if not found or expired.
+        """
+        async with self.lock:
+            return self.cache.get(user_id, {}).copy()
 
     async def clear(self, user_id: str) -> None:
         """

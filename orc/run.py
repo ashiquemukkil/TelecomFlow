@@ -35,7 +35,10 @@ async def call_semantic_function(kernel, function, arguments):
     function_result = await kernel.invoke(function, arguments)
     return function_result
 
-async def get_answer(query: str, history: list, conv_id: str) -> str:
+async def get_answer(query: str, history: list, conv_id: str,user_data: dict) -> str:
+    if user_data.get("waiting_for_agent") == True:
+        return "Please wait, An agent will get back to you soon.", True, user_data, False
+    print("## User data in get_answer: ", user_data)
     bot_description = open(BOT_DESCRIPTION_FILE, "r").read()
 
     kernel = await create_kernel()
@@ -45,6 +48,8 @@ async def get_answer(query: str, history: list, conv_id: str) -> str:
     arguments["ask"] = query
     arguments["history"] = history
     arguments["previous_answer"] = history[-2]['content'] if len(history) > 1 else ""
+    is_agent_required = False
+    is_user_data_changed = False
     # import RAG plugins
     conversationPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Conversations")))
     retrievalPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Retrieval")))
@@ -73,6 +78,19 @@ async def get_answer(query: str, history: list, conv_id: str) -> str:
     
     intents = triage_dict.get("intents", [])
     if set(intents).intersection({"follow_up", "question_answering"}):
+        if not user_data.get("traveling_date") or not user_data.get("traveling_from") or not user_data.get("number_of_people"):
+            arguments["user_data"] = str(user_data)
+            is_user_data_changed = True
+            function_result = await call_semantic_function(kernel, conversationPlugin["CollectData"], arguments)
+            function_result = str(function_result)    
+            try:
+                response = function_result.strip("`json\n`")
+                collected_data_dict = json.loads(response)
+                user_data = collected_data_dict
+                if user_data.get("question"):
+                    return user_data["question"], False, user_data, True
+            except json.JSONDecodeError:
+                raise Exception(f"CollectData was not successful due to a JSON error. Invalid json: {function_result}")
         answer = triage_dict['answer']
         retrievalPlugin= await retrievalPluginTask
        
@@ -81,7 +99,17 @@ async def get_answer(query: str, history: list, conv_id: str) -> str:
         arguments["sources"] = search_function_result
 
         function_result = await call_semantic_function(kernel, conversationPlugin["Answer"], arguments)
-        answer =  str(function_result)
+        answer_str =  str(function_result)
+        try:
+            response = answer_str.strip("`json\n`")
+            answer_dict = json.loads(response)
+            answer = answer_dict.get("answer", "unable to provide answer now")
+            is_agent_required = answer_dict.get("is_agent_required", False)
+            user_data["waiting_for_agent"] = is_agent_required
+        except json.JSONDecodeError:
+            raise Exception(f"Triage was not successful due to a JSON error. Invalid json: {answer_str}") 
+        if is_agent_required:
+            answer = "Please wait, An agent will get back to you soon."
         
     elif set(intents).intersection({"about_bot", "off_topic"}):
         answer = triage_dict['answer']
@@ -92,7 +120,6 @@ async def get_answer(query: str, history: list, conv_id: str) -> str:
     elif intents == ["none"]:
         answer = "unable to provide answer now"
     else:
-        print(f"Unexpected triage result: {intents}")
         answer = "unable to provide answer now"
     
-    return answer
+    return answer, is_agent_required, user_data, is_user_data_changed

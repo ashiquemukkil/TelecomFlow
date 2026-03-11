@@ -1,0 +1,33 @@
+{
+    "schema": 1,
+    "description": "Generate and answer based on the provided sources",
+    "execution_settings": {
+      "default": {
+        "max_tokens": 200,
+        "temperature": 0.0,
+        "top_p": 0.0,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0
+      }
+    },
+    "input_variables": [
+        {
+          "name": "ask",
+          "description": "User current chat(i.e., How do I execute task A?)",
+          "defaultValue": "",
+          "required": true	
+        },
+        {
+          "name": "conversation_summary",
+          "description": "Conversation history summary.",
+          "defaultValue": "",
+          "required": true	
+        },
+        {
+          "name": "user_data",
+          "description": "Already known user data.",
+          "defaultValue": "",
+          "required": false
+        }
+    ]
+  }
