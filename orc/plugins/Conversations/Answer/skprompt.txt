@@ -2,7 +2,7 @@
 {{$bot_description}}
 
 ## Task Goal
-The task goal is to generate an answer for the QUESTION based only on the provided SOURCES.
+The task goal is to generate an answer for the QUESTION based only on the provided SOURCES and consider USER_DETAILS.
 
 ## Task Instructions
 Do not generate or include any itinerary, visa, hotel or expense information unless the user's question clearly requests it.

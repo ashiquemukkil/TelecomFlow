@@ -3,8 +3,10 @@
 from typing import List, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
+import logging
 
 from orc.orchestrator import run
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
@@ -21,10 +23,10 @@ class ChatResponse(BaseModel):
 @app.post("/chat", response_model=ChatResponse, include_in_schema=False)
 async def create_item(chat: ChatRequest):
     response, is_agent_required = await run(chat.phone, chat.ask)
-    return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
-    # if chat.phone not in ["1234567890", "8714446494"]:
-    #     return ChatResponse(id=chat.phone, answer="Sorry, you are not allowed to ask questions.", is_allowed=False)
-    # return ChatResponse(id=chat.phone, answer=f"Received your question: {chat.ask}. History: {chat.history}")
+    logging.info(f"Response for phone {chat.phone}: {response}, Agent required: {is_agent_required}")
+    if "8714446494" in chat.phone or "69999" in chat.phone:
+        return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
+    return ChatResponse(id=chat.phone, answer=response, is_allowed=False)
 
 if __name__ == "__main__":
     import uvicorn
