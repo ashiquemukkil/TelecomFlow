@@ -24,9 +24,9 @@ class ChatResponse(BaseModel):
 async def create_item(chat: ChatRequest):
     response, is_agent_required = await run(chat.phone, chat.ask)
     logging.info(f"Response for phone {chat.phone}: {response}, Agent required: {is_agent_required}")
-    if "8714446494" in chat.phone or "69999" in chat.phone:
-        return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
-    return ChatResponse(id=chat.phone, answer=response, is_allowed=False)
+    # if "8714446494" in chat.phone or "69999" in chat.phone:
+    return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
+    # return ChatResponse(id=chat.phone, answer=response, is_allowed=False)
 
 if __name__ == "__main__":
     import uvicorn
