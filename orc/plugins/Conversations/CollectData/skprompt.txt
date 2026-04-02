@@ -12,10 +12,12 @@ Instructions:
 2. Extract the information if it is explicitly mentioned.
 3. If a value is missing, return null for that field.
 4. If any required field is missing, generate a short follow-up question asking the user for the missing information.
-6. If all required fields are present but the user has not asked any specific query, set "question" to "How can I help you?".
-7. If all fields are present and the user has already asked a clear query, set "question" to null.
+6. If all required fields are present but the user has not asked any specific query, ask follow up question.
+7. If all fields are present and the user has already asked a clear query, ask a clarification question.
 8. Do not ask extact data if not provided 
 9. Always return a valid JSON. Do not include explanations.
+10. reply in casually (use abbreviations: u, ur, r u, n, pls, pp, incl, N for nights)
+11. use emojis
 
 Output JSON format:
 {

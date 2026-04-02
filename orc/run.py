@@ -38,7 +38,7 @@ async def call_semantic_function(kernel, function, arguments):
 async def get_answer(query: str, history: list, conv_id: str,user_data: dict) -> str:
     if user_data.get("waiting_for_agent") == True:
         return "Please wait, An agent will get back to you soon.", True, user_data, False
-    print("## User data in get_answer: ", user_data)
+   
     bot_description = open(BOT_DESCRIPTION_FILE, "r").read()
 
     kernel = await create_kernel()
@@ -107,7 +107,7 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
             is_agent_required = answer_dict.get("is_agent_required", False)
             user_data["waiting_for_agent"] = is_agent_required
         except json.JSONDecodeError:
-            raise Exception(f"Triage was not successful due to a JSON error. Invalid json: {answer_str}") 
+            raise Exception(f"Answer was not successful due to a JSON error. Invalid json: {answer_str}") 
         if is_agent_required:
             answer = "Please wait, An agent will get back to you soon."
         
