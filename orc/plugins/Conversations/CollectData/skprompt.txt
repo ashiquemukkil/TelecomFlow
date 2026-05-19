@@ -21,10 +21,10 @@ Instructions:
 
 Output JSON format:
 {
-  "traveling_date": <traveling time statement/date or null>,
-  "traveling_from": <city/place or null>,
-  "number_of_people": <integer or null>,
-  "question": <follow-up question if data missing, otherwise null>
+  "traveling_date": "traveling time statement/date" or null,
+  "traveling_from": "city/place" or null,
+  "number_of_people": integer or null,
+  "question": "follow-up question if data missing" or null
 }
 existing USER_DATA:
 {{$user_data}}

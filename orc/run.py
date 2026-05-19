@@ -23,7 +23,7 @@ async def create_kernel(service_id='aoai_chat_completion'):
     kernel = sk.Kernel()
     kernel.add_service(
         OpenAIChatCompletion(
-            ai_model_id="gpt-4o",
+            ai_model_id="gpt-4.1",
             service_id=service_id,
             api_key=os.getenv("OPENAI_API_KEY"),
         )
@@ -36,6 +36,8 @@ async def call_semantic_function(kernel, function, arguments):
     return function_result
 
 async def get_answer(query: str, history: list, conv_id: str,user_data: dict) -> str:
+    user_data = user_data or {}
+
     if user_data.get("waiting_for_agent") == True:
         return "Please wait, An agent will get back to you soon.", True, user_data, False
    
@@ -48,6 +50,7 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
     arguments["ask"] = query
     arguments["history"] = history
     arguments["previous_answer"] = history[-2]['content'] if len(history) > 1 else ""
+    arguments["user_data"] = str(user_data)
     is_agent_required = False
     is_user_data_changed = False
     # import RAG plugins

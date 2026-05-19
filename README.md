@@ -80,7 +80,7 @@ The repository also includes a CRM automation flow screenshot at [flow.png](flow
 ![CRM automation flow](flow.png)
 
 This diagram represents the higher-level business workflow around TeleCRMFlow inside the CRM layer. It is useful for understanding how the assistant fits into the broader lead handling process beyond the Python app itself.
-
+ 
 ## Tech stack
 
 - Python

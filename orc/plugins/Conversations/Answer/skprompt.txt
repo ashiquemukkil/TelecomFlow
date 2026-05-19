@@ -23,8 +23,8 @@ Rules:
 
 ## JSON Output Format
 {
-  "answer": "<generated answer with source references>",
-  "is_agent_required": <true or false>
+  "answer": "generated answer with source references",
+  "is_agent_required": true_or_false
 }
 
 ## Task Input

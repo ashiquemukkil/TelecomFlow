@@ -1,6 +1,6 @@
 # write class to setup FAISS vector store and use it to search for similar documents
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 import os
 
 class AISearch:
