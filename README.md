@@ -193,6 +193,19 @@ Chainlit will open a browser-based chat UI where the user is first asked for a p
 
 `POST /chat`
 
+### Admin endpoints
+
+- `GET /admin` — browser-based admin UI for prompt and knowledge base management
+- `GET /admin/api/prompts` — list editable prompt files
+- `GET /admin/api/prompts/{prompt_id}` — load one prompt file
+- `PUT /admin/api/prompts/{prompt_id}` — save prompt changes without redeploying
+- `GET /admin/api/knowledge-base/documents` — list managed knowledge documents and indexing status
+- `POST /admin/api/knowledge-base/documents` — upload a UTF-8 text document
+- `GET /admin/api/knowledge-base/documents/{document_name}` — load one managed document
+- `PUT /admin/api/knowledge-base/documents/{document_name}` — update one managed document
+- `DELETE /admin/api/knowledge-base/documents/{document_name}` — remove one managed document
+- `POST /admin/api/knowledge-base/refresh` — rebuild the FAISS index from managed documents
+
 ### Request body
 
 ```json
@@ -249,6 +262,8 @@ This makes it easy to refine assistant behavior without rewriting the Python orc
 
 The retrieval layer uses a local FAISS index stored in [knowledgebase/index.faiss](knowledgebase/index.faiss).
 
+Operationally managed source documents should now be stored under [knowledgebase/documents](knowledgebase/documents). The admin UI writes files there and rebuilds the FAISS index on demand.
+
 The current knowledge base appears focused on:
 
 - Azerbaijan package itineraries
@@ -258,6 +273,23 @@ The current knowledge base appears focused on:
 - SIM card advice
 - card vs cash guidance
 - child pricing rules
+
+## Admin management UI
+
+The app now includes an operations-facing admin page at `GET /admin`.
+
+It supports:
+
+- viewing and editing all live prompt files used by the orchestrator
+- uploading new UTF-8 text documents for retrieval
+- editing and deleting existing managed knowledge documents
+- viewing per-document index status (`indexed` or `stale`)
+- manually refreshing the FAISS knowledge base after content changes
+
+Important note:
+
+- prompt edits apply to new chat requests immediately because the orchestrator reads prompt files from disk each time it runs
+- knowledge base document changes are only searchable after calling the refresh action, which rebuilds the FAISS index
 
 Retrieval is implemented in [orc/plugins/Retrieval/retrieval.py](orc/plugins/Retrieval/retrieval.py) and [connectors/aisearch.py](connectors/aisearch.py).
 

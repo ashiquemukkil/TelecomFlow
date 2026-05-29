@@ -9,7 +9,23 @@ class AISearch:
         self.embeddings = OpenAIEmbeddings()
         self.vector_store = None
 
+    def _index_files(self):
+        return (
+            os.path.join(self.index_path, "index.faiss"),
+            os.path.join(self.index_path, "index.pkl"),
+        )
+
+    def has_index(self):
+        return all(os.path.exists(path) for path in self._index_files())
+
     def setup_vector_store(self, documents: list):
+        os.makedirs(self.index_path, exist_ok=True)
+        if not documents:
+            for path in self._index_files():
+                if os.path.exists(path):
+                    os.remove(path)
+            self.vector_store = None
+            return
         # Create a FAISS vector store from the documents
         self.vector_store = FAISS.from_texts(documents, self.embeddings)
         # Save the vector store to disk
@@ -17,18 +33,18 @@ class AISearch:
 
     def load_vector_store(self):
         # Load the vector store from disk
-        if os.path.exists(self.index_path):
+        if self.has_index():
             self.vector_store = FAISS.load_local(
                 self.index_path,
                 self.embeddings,
                 allow_dangerous_deserialization=True,
             )
         else:
-            raise FileNotFoundError(f"Vector store not found at {self.index_path}")
+            self.vector_store = None
 
     def search(self, query: str, k: int = 3):
         if not self.vector_store:
-            raise ValueError("Vector store is not loaded. Please load it before searching.")
+            return []
         # Search for similar documents
         results = self.vector_store.similarity_search(query, k=k)
         return results

@@ -5,10 +5,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 
+from admin_panel import router as admin_router
 from orc.orchestrator import run
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
+app.include_router(admin_router)
 
 class ChatRequest(BaseModel):
     phone: str
@@ -24,7 +26,7 @@ class ChatResponse(BaseModel):
 async def create_item(chat: ChatRequest):
     response, is_agent_required = await run(chat.phone, chat.ask)
     logging.info(f"Response for phone {chat.phone}: {response}, Agent required: {is_agent_required}")
-    # if "8714446494" in chat.phone or "69999" in chat.phone:
+    
     return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
     # return ChatResponse(id=chat.phone, answer=response, is_allowed=False)
 
