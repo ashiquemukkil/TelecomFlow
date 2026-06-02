@@ -122,6 +122,39 @@
         </div>
       </section>
     </div>
+
+    <section class="panel conversation-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Recent Cache Conversations</h2>
+          <p>Review the latest 10 cached conversations, filter by phone number, and clear a conversation when needed.</p>
+        </div>
+        <div class="actions">
+          <input type="text" id="conversationSearch" placeholder="Search by phone number" />
+          <button class="secondary" id="searchConversations" type="button">Search</button>
+          <button class="secondary" id="reloadConversations" type="button">Reload</button>
+        </div>
+      </div>
+
+      <div class="conversation-layout">
+        <div class="list-box" id="conversationList"></div>
+
+        <div class="conversation-detail">
+          <div class="actions">
+            <span class="badge" id="conversationIdBadge">Select a conversation</span>
+            <span class="meta" id="conversationUpdated"></span>
+          </div>
+          <div class="conversation-user-data" id="conversationUserData">No user data available.</div>
+          <div class="conversation-transcript" id="conversationTranscript">
+            <div class="chat-empty">Select a cached conversation to inspect its history.</div>
+          </div>
+          <div class="actions">
+            <button class="danger" id="clearConversation" type="button">Clear Conversation History</button>
+          </div>
+          <div class="status-line" id="conversationStatus"></div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="/admin/assets/admin.js"></script>

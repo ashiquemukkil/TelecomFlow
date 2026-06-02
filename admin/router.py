@@ -18,6 +18,7 @@ from openai import OpenAIError
 from pydantic import BaseModel
 
 from connectors.aisearch import AISearch
+from connectors.cosmos import ConversationCache
 
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -244,6 +245,16 @@ def _rebuild_knowledge_base() -> dict[str, Any]:
     return status
 
 
+def _serialize_conversation_summary(conversation: dict[str, Any]) -> dict[str, Any]:
+    messages = conversation.get("messages", [])
+    return {
+        "conversation_id": conversation.get("conversation_id"),
+        "message_count": conversation.get("message_count", len(messages)),
+        "last_message_at": conversation.get("last_message_at"),
+        "preview": messages[-1].get("content", "") if messages else "",
+    }
+
+
 @router.get("/admin", response_class=HTMLResponse, include_in_schema=False)
 async def admin_page(request: Request) -> HTMLResponse:
     if not _is_authenticated(request):
@@ -419,3 +430,49 @@ async def refresh_knowledge_base(request: Request) -> dict[str, Any]:
             detail="Knowledge base refresh requires a valid OPENAI_API_KEY for embeddings.",
         ) from exc
     return {"message": "Knowledge base refreshed", "status": status}
+
+
+@router.get("/admin/api/conversations")
+async def list_cached_conversations(request: Request, search: str = "") -> dict[str, Any]:
+    _require_admin_session(request)
+    async with ConversationCache() as db_cache:
+        conversations = await db_cache.list_recent_conversations(search=search, limit=10)
+
+    items = [_serialize_conversation_summary(conversation) for conversation in conversations]
+    selected = None
+    if conversations:
+        selected = {
+            "conversation_id": conversations[0]["conversation_id"],
+            "message_count": conversations[0]["message_count"],
+            "last_message_at": conversations[0]["last_message_at"],
+            "messages": conversations[0]["messages"],
+            "user_data": conversations[0]["user_data"],
+        }
+    return {"items": items, "selected": selected}
+
+
+@router.get("/admin/api/conversations/{conversation_id}")
+async def get_cached_conversation(conversation_id: str, request: Request) -> dict[str, Any]:
+    _require_admin_session(request)
+    async with ConversationCache() as db_cache:
+        conversations = await db_cache.list_recent_conversations(limit=100)
+
+    for conversation in conversations:
+        if conversation["conversation_id"] == conversation_id:
+            return {
+                "conversation_id": conversation["conversation_id"],
+                "message_count": conversation["message_count"],
+                "last_message_at": conversation["last_message_at"],
+                "messages": conversation["messages"],
+                "user_data": conversation["user_data"],
+            }
+
+    raise HTTPException(status_code=404, detail="Conversation not found")
+
+
+@router.delete("/admin/api/conversations/{conversation_id}")
+async def delete_cached_conversation(conversation_id: str, request: Request) -> dict[str, Any]:
+    _require_admin_session(request)
+    async with ConversationCache() as db_cache:
+        await db_cache.clear_conversation(conversation_id)
+    return {"message": "Conversation cleared", "conversation_id": conversation_id}

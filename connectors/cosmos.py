@@ -70,6 +70,43 @@ class ConversationCache:
         async with self.lock:
             self.cache.pop(user_id, None)
 
+    async def clear_conversation(self, user_id: str) -> None:
+        """
+        Remove conversation history and stored user data for a user.
+        """
+        async with self.lock:
+            self.cache.pop(user_id, None)
+            self.cache.pop(f"{user_id}:user_data", None)
+
+    async def list_recent_conversations(self, search: str = "", limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        List recent cached conversations, optionally filtered by phone substring.
+        """
+        normalized_search = search.strip().lower()
+
+        async with self.lock:
+            conversations: List[Dict[str, Any]] = []
+            for user_id, value in self.cache.items():
+                if user_id.endswith(":user_data") or not isinstance(value, list):
+                    continue
+                if normalized_search and normalized_search not in user_id.lower():
+                    continue
+
+                messages = [message.copy() for message in value if isinstance(message, dict)]
+                last_timestamp = messages[-1].get("timestamp") if messages else None
+                conversations.append(
+                    {
+                        "conversation_id": user_id,
+                        "message_count": len(messages),
+                        "last_message_at": last_timestamp,
+                        "messages": messages,
+                        "user_data": self.cache.get(f"{user_id}:user_data", {}).copy(),
+                    }
+                )
+
+        conversations.sort(key=lambda item: item["last_message_at"] or "", reverse=True)
+        return conversations[:limit]
+
 
 async def main() -> None:
     cache = ConversationCache()

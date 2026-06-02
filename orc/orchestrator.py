@@ -1,5 +1,5 @@
 from connectors.cosmos import ConversationCache
-from orc.run_old import get_answer
+from orc.run import get_answer
     
 async def run(conversation_id, ask: str):
     async with ConversationCache() as db_cache:

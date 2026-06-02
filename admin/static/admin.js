@@ -1,6 +1,7 @@
 const state = {
   selectedPromptId: null,
   selectedDocument: null,
+  selectedConversationId: null,
   chatPhone: '',
   isChatOpen: false,
 };
@@ -28,6 +29,14 @@ const chatLog = document.getElementById('chatLog');
 const chatMessage = document.getElementById('chatMessage');
 const sendChatMessageButton = document.getElementById('sendChatMessage');
 const chatStatus = document.getElementById('chatStatus');
+const conversationSearch = document.getElementById('conversationSearch');
+const conversationList = document.getElementById('conversationList');
+const conversationIdBadge = document.getElementById('conversationIdBadge');
+const conversationUpdated = document.getElementById('conversationUpdated');
+const conversationUserData = document.getElementById('conversationUserData');
+const conversationTranscript = document.getElementById('conversationTranscript');
+const conversationStatus = document.getElementById('conversationStatus');
+const clearConversationButton = document.getElementById('clearConversation');
 
 function setStatus(element, message, type = '') {
   element.textContent = message;
@@ -189,6 +198,48 @@ function renderDocumentList(items) {
   }
 }
 
+function renderConversationList(items) {
+  conversationList.innerHTML = '';
+
+  if (!items.length) {
+    conversationList.innerHTML = '<div class="list-item"><strong>No cached conversations</strong><small>Try a different phone number search or wait for new traffic.</small></div>';
+    return;
+  }
+
+  for (const item of items) {
+    const row = document.createElement('div');
+    row.className = `list-item ${state.selectedConversationId === item.conversation_id ? 'active' : ''}`.trim();
+    row.innerHTML = `<strong>${escapeHtml(item.conversation_id)}</strong><small>${item.message_count} messages</small><small>Updated ${formatDate(item.last_message_at)}</small><small>${escapeHtml(item.preview || 'No messages yet.')}</small>`;
+    row.addEventListener('click', () => loadConversation(item.conversation_id));
+    conversationList.appendChild(row);
+  }
+}
+
+function renderConversationDetails(data) {
+  state.selectedConversationId = data?.conversation_id || null;
+  conversationIdBadge.textContent = data?.conversation_id || 'Select a conversation';
+  conversationUpdated.textContent = data?.last_message_at ? `Last updated ${formatDate(data.last_message_at)}` : '';
+  clearConversationButton.disabled = !data?.conversation_id;
+
+  const userData = data?.user_data && Object.keys(data.user_data).length
+    ? JSON.stringify(data.user_data, null, 2)
+    : 'No user data available.';
+  conversationUserData.textContent = userData;
+
+  if (!data?.messages?.length) {
+    conversationTranscript.innerHTML = '<div class="chat-empty">Select a cached conversation to inspect its history.</div>';
+    return;
+  }
+
+  conversationTranscript.innerHTML = data.messages.map((message) => `
+    <div class="chat-message ${message.role === 'user' ? 'user' : 'assistant'}">
+      <span>${escapeHtml(message.role || 'unknown')}</span>
+      <p>${escapeHtml(message.content || '')}</p>
+      <small>${formatDate(message.timestamp)}</small>
+    </div>
+  `).join('');
+}
+
 async function loadPrompts() {
   const response = await apiFetch('/admin/api/prompts');
   const data = await response.json();
@@ -333,12 +384,76 @@ async function refreshKnowledgeBase() {
   await loadKnowledgeBase();
 }
 
+async function loadConversations(searchValue = conversationSearch.value.trim()) {
+  const query = searchValue ? `?search=${encodeURIComponent(searchValue)}` : '';
+  const response = await apiFetch(`/admin/api/conversations${query}`);
+  const data = await response.json();
+  if (!response.ok) {
+    setStatus(conversationStatus, data.detail || 'Unable to load cached conversations.', 'error');
+    return;
+  }
+
+  renderConversationList(data.items || []);
+
+  if (!state.selectedConversationId) {
+    renderConversationDetails(data.selected || null);
+    renderConversationList(data.items || []);
+  } else if (!(data.items || []).some((item) => item.conversation_id === state.selectedConversationId)) {
+    renderConversationDetails(data.selected || null);
+    renderConversationList(data.items || []);
+  }
+
+  setStatus(conversationStatus, '', '');
+}
+
+async function loadConversation(conversationId) {
+  state.selectedConversationId = conversationId;
+  const response = await apiFetch(`/admin/api/conversations/${encodeURIComponent(conversationId)}`);
+  const data = await response.json();
+  if (!response.ok) {
+    setStatus(conversationStatus, data.detail || 'Unable to load conversation.', 'error');
+    return;
+  }
+
+  renderConversationDetails(data);
+  await loadConversations(conversationSearch.value.trim());
+}
+
+async function clearConversation() {
+  if (!state.selectedConversationId) {
+    setStatus(conversationStatus, 'Select a conversation first.', 'error');
+    return;
+  }
+
+  const confirmed = window.confirm(`Clear cached history for ${state.selectedConversationId}?`);
+  if (!confirmed) {
+    return;
+  }
+
+  const response = await apiFetch(`/admin/api/conversations/${encodeURIComponent(state.selectedConversationId)}`, {
+    method: 'DELETE',
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    setStatus(conversationStatus, data.detail || 'Unable to clear conversation.', 'error');
+    return;
+  }
+
+  state.selectedConversationId = null;
+  renderConversationDetails(null);
+  setStatus(conversationStatus, data.message || 'Conversation cleared.', 'success');
+  await loadConversations(conversationSearch.value.trim());
+}
+
 document.getElementById('reloadPrompts').addEventListener('click', () => loadPrompts());
 document.getElementById('savePrompt').addEventListener('click', savePrompt);
 document.getElementById('uploadDocument').addEventListener('click', uploadDocument);
 document.getElementById('saveDocument').addEventListener('click', saveDocument);
 document.getElementById('deleteDocument').addEventListener('click', deleteDocument);
 document.getElementById('refreshKnowledgeBase').addEventListener('click', refreshKnowledgeBase);
+document.getElementById('searchConversations').addEventListener('click', () => loadConversations(conversationSearch.value.trim()));
+document.getElementById('reloadConversations').addEventListener('click', () => loadConversations(conversationSearch.value.trim()));
+document.getElementById('clearConversation').addEventListener('click', clearConversation);
 toggleChatPanelButton.addEventListener('click', () => toggleChatPanel());
 restartApplicationButton.addEventListener('click', restartApplication);
 startChatSessionButton.addEventListener('click', startChatSession);
@@ -349,11 +464,19 @@ chatMessage.addEventListener('keydown', (event) => {
     sendChatMessage();
   }
 });
+conversationSearch.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    loadConversations(conversationSearch.value.trim());
+  }
+});
 
 toggleChatPanel(false);
+renderConversationDetails(null);
 
-Promise.all([loadPrompts(), loadKnowledgeBase()]).catch((error) => {
+Promise.all([loadPrompts(), loadKnowledgeBase(), loadConversations()]).catch((error) => {
   console.error(error);
   setStatus(promptStatus, 'Unable to load admin data.', 'error');
   setStatus(documentStatus, 'Unable to load admin data.', 'error');
+  setStatus(conversationStatus, 'Unable to load admin data.', 'error');
 });
