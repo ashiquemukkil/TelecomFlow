@@ -19,6 +19,7 @@ const documentStatus = document.getElementById('documentStatus');
 const docCount = document.getElementById('docCount');
 const lastRefresh = document.getElementById('lastRefresh');
 const toggleChatPanelButton = document.getElementById('toggleChatPanel');
+const restartApplicationButton = document.getElementById('restartApplication');
 const adminChatPanel = document.getElementById('adminChatPanel');
 const chatPhone = document.getElementById('chatPhone');
 const startChatSessionButton = document.getElementById('startChatSession');
@@ -131,6 +132,36 @@ async function apiFetch(url, options) {
     throw new Error('Unauthorized');
   }
   return response;
+}
+
+async function restartApplication() {
+  const confirmed = window.confirm('Restart the FastAPI application now?');
+  if (!confirmed) {
+    return;
+  }
+
+  restartApplicationButton.disabled = true;
+  restartApplicationButton.textContent = 'Restarting...';
+  setStatus(promptStatus, 'Restarting application...', '');
+
+  try {
+    const response = await apiFetch('/admin/api/restart', { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) {
+      setStatus(promptStatus, data.detail || 'Unable to restart application.', 'error');
+      return;
+    }
+    setStatus(promptStatus, `${data.message}. The page may disconnect briefly.`, 'success');
+    window.setTimeout(() => window.location.reload(), 3000);
+  } catch (error) {
+    console.error(error);
+    setStatus(promptStatus, 'Unable to restart application.', 'error');
+  } finally {
+    window.setTimeout(() => {
+      restartApplicationButton.disabled = false;
+      restartApplicationButton.textContent = 'Restart App';
+    }, 3000);
+  }
 }
 
 function renderPromptList(items) {
@@ -309,6 +340,7 @@ document.getElementById('saveDocument').addEventListener('click', saveDocument);
 document.getElementById('deleteDocument').addEventListener('click', deleteDocument);
 document.getElementById('refreshKnowledgeBase').addEventListener('click', refreshKnowledgeBase);
 toggleChatPanelButton.addEventListener('click', () => toggleChatPanel());
+restartApplicationButton.addEventListener('click', restartApplication);
 startChatSessionButton.addEventListener('click', startChatSession);
 sendChatMessageButton.addEventListener('click', sendChatMessage);
 chatMessage.addEventListener('keydown', (event) => {

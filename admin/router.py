@@ -8,10 +8,11 @@ import hmac
 import mimetypes
 import os
 from pathlib import Path
+import sys
 import time
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from openai import OpenAIError
 from pydantic import BaseModel
@@ -57,6 +58,10 @@ class DocumentUpdateRequest(BaseModel):
 
 
 router = APIRouter(tags=["admin"])
+
+
+def _restart_application_process() -> None:
+    os.execv(sys.executable, [sys.executable, *sys.argv])
 
 
 def _ensure_storage() -> None:
@@ -282,6 +287,13 @@ async def admin_logout() -> RedirectResponse:
     response = RedirectResponse(url="/admin/login", status_code=303)
     response.delete_cookie(ADMIN_SESSION_COOKIE)
     return response
+
+
+@router.post("/admin/api/restart")
+async def restart_application(request: Request, background_tasks: BackgroundTasks) -> dict[str, str]:
+    _require_admin_session(request)
+    background_tasks.add_task(_restart_application_process)
+    return {"message": "Application restart requested"}
 
 
 @router.get("/admin/api/prompts")

@@ -1,0 +1,15 @@
+"Halal food is widely available in Azerbaijan because the country has a Muslim majority population.",
+
+    "Flight duration from UAE to Baku is approximately 3 hours.",
+
+    "Travelers visiting Azerbaijan are advised to carry at least 250 USD or equivalent amount in Azerbaijani Manat for personal expenses during the trip.",
+
+    """Travelers should ideally buy a SIM card at the airport upon arrival in Azerbaijan. Airport kiosks usually offer cheaper and more reliable tourist SIM packages.
+    SIM cards purchased inside the city in Azerbaijan can sometimes be significantly more expensive. Some shops may charge up to 95 USD for tourist SIM packages.""",
+
+    """It is not recommended to rely completely on international debit or credit cards while traveling in Azerbaijan. Some smaller shops and local businesses may prefer cash payments.
+    International bank cards may have daily spending limits and additional transaction or currency conversion fees when used in Azerbaijan.
+    Travelers are advised to carry sufficient cash in USD or Azerbaijani Manat for daily expenses when visiting Azerbaijan.""",
+
+    """Child pricing policy: Children below 5 years can join the tour free of charge, but flight tickets are chargeable.
+    For children below 5 years, visa charges and travel insurance costs are still applicable even though the tour itself is free."""
