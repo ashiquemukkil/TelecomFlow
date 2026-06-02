@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 
-from admin_panel import router as admin_router
+from admin import router as admin_router
 from orc.orchestrator import run
 logging.basicConfig(level=logging.INFO)
 

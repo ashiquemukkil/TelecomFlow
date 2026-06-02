@@ -49,16 +49,11 @@ A user sends a message with a phone number. The app then:
 
 ### Connectors
 
-- [connectors/aoai.py](connectors/aoai.py) — OpenAI chat and embedding helper
-- [connectors/aisearch.py](connectors/aisearch.py) — FAISS vector store load/search logic
-- [connectors/cosmos.py](connectors/cosmos.py) — in-memory TTL conversation cache used as the session store
-
 ### Knowledge and prompts
 
 - [knowledgebase/index.faiss](knowledgebase/index.faiss) — vector index used for retrieval
 - [orc/bot_description.prompt](orc/bot_description.prompt) — assistant persona and role
 - [orc/plugins/Conversations](orc/plugins/Conversations) — prompt functions for triage, language detection, data collection, summary, and answering
-- [orc/plugins/Retrieval/retrieval.py](orc/plugins/Retrieval/retrieval.py) — retrieval plugin that queries the FAISS store
 
 ## Request flow
 
@@ -72,16 +67,9 @@ Client/API/UI
    -> OpenAI model
    -> Final answer + optional agent escalation
 ```
-
-## CRM automation flow
-
-The repository also includes a CRM automation flow screenshot at [flow.png](flow.png).
-
 ![CRM automation flow](flow.png)
 
 This diagram represents the higher-level business workflow around TeleCRMFlow inside the CRM layer. It is useful for understanding how the assistant fits into the broader lead handling process beyond the Python app itself.
- 
-## Tech stack
 
 - Python
 - FastAPI
@@ -132,11 +120,17 @@ For travel questions and follow-ups, the app may first collect missing fields be
 Create a `.env` file or export the variable in your shell:
 
 - `OPENAI_API_KEY` — required for chat completion and embeddings
+- `ADMIN_USERNAME` — admin login username for `/admin`, default `admin`
+- `ADMIN_PASSWORD` — admin login password for `/admin`, default `change-me-admin`
+- `ADMIN_SESSION_SECRET` — signing secret for admin session cookies
 
 Example:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=replace-this-before-deploy
+ADMIN_SESSION_SECRET=replace-this-with-a-random-secret
 ```
 
 ## Local setup
@@ -195,7 +189,10 @@ Chainlit will open a browser-based chat UI where the user is first asked for a p
 
 ### Admin endpoints
 
-- `GET /admin` — browser-based admin UI for prompt and knowledge base management
+- `GET /admin/login` — admin sign-in page
+- `POST /admin/login` — create admin session cookie
+- `POST /admin/logout` — clear admin session cookie
+- `GET /admin` — protected browser-based admin UI for prompt and knowledge base management
 - `GET /admin/api/prompts` — list editable prompt files
 - `GET /admin/api/prompts/{prompt_id}` — load one prompt file
 - `PUT /admin/api/prompts/{prompt_id}` — save prompt changes without redeploying
@@ -278,6 +275,8 @@ The current knowledge base appears focused on:
 
 The app now includes an operations-facing admin page at `GET /admin`.
 
+Access is protected by a login page at `GET /admin/login`.
+
 It supports:
 
 - viewing and editing all live prompt files used by the orchestrator
@@ -290,6 +289,7 @@ Important note:
 
 - prompt edits apply to new chat requests immediately because the orchestrator reads prompt files from disk each time it runs
 - knowledge base document changes are only searchable after calling the refresh action, which rebuilds the FAISS index
+- change the default admin credentials before exposing the app outside local development
 
 Retrieval is implemented in [orc/plugins/Retrieval/retrieval.py](orc/plugins/Retrieval/retrieval.py) and [connectors/aisearch.py](connectors/aisearch.py).
 

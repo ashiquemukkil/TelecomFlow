@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeleCRMFlow Admin</title>
+  <link rel="stylesheet" href="/admin/assets/admin.css" />
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <h1>Admin Management</h1>
+        <p>Update the live prompt files and maintain the source documents behind retrieval without editing Python code or shipping a new deployment.</p>
+      </div>
+      <div class="hero-side">
+        <form class="logout-form" method="post" action="/admin/logout">
+          <button class="secondary" type="submit">Log Out</button>
+        </form>
+        <div class="status-grid">
+          <div class="status-card">
+            <span>Prompt Files</span>
+            <strong id="promptCount">0</strong>
+          </div>
+          <div class="status-card">
+            <span>Knowledge Docs</span>
+            <strong id="docCount">0</strong>
+          </div>
+          <div class="status-card">
+            <span>Last Refresh</span>
+            <strong id="lastRefresh">Never</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Prompt Management</h2>
+            <p>Edit the prompt files the orchestrator already reads from disk for each request.</p>
+          </div>
+          <button class="secondary" id="reloadPrompts">Reload</button>
+        </div>
+
+        <div class="split">
+          <div class="list-box" id="promptList"></div>
+
+          <div>
+            <div class="actions">
+              <span class="badge" id="promptPathBadge">Select a prompt</span>
+              <span class="meta" id="promptUpdated"></span>
+            </div>
+            <textarea id="promptEditor" placeholder="Select a prompt to edit"></textarea>
+            <div class="actions">
+              <button class="primary" id="savePrompt">Save Prompt</button>
+            </div>
+            <div class="status-line" id="promptStatus"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Knowledge Base Management</h2>
+            <p>Manage editable knowledge documents and rebuild the FAISS store when content changes.</p>
+          </div>
+          <button class="primary" id="refreshKnowledgeBase">Refresh Index</button>
+        </div>
+
+        <div class="upload-row">
+          <input type="file" id="documentUpload" accept=".txt,.md,.json,.csv,.html,.htm,.xml,.yaml,.yml" />
+          <button class="secondary" id="uploadDocument">Upload Document</button>
+        </div>
+        <div class="hint">Supported formats: UTF-8 text files such as .txt, .md, .json, .csv, .html, .xml, .yaml.</div>
+
+        <div class="document-panel">
+          <div class="list-box" id="documentList"></div>
+
+          <div class="doc-editor">
+            <input type="text" id="documentName" placeholder="Document name" readonly />
+            <textarea id="documentEditor" placeholder="Select a document to view or edit"></textarea>
+            <div class="doc-actions">
+              <button class="primary" id="saveDocument">Save Document</button>
+              <button class="danger" id="deleteDocument">Delete Document</button>
+            </div>
+            <div class="status-line" id="documentStatus"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="/admin/assets/admin.js"></script>
+</body>
+</html>
