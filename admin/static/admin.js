@@ -1,6 +1,8 @@
 const state = {
   selectedPromptId: null,
   selectedDocument: null,
+  chatPhone: '',
+  isChatOpen: false,
 };
 
 const promptList = document.getElementById('promptList');
@@ -16,6 +18,15 @@ const documentEditor = document.getElementById('documentEditor');
 const documentStatus = document.getElementById('documentStatus');
 const docCount = document.getElementById('docCount');
 const lastRefresh = document.getElementById('lastRefresh');
+const toggleChatPanelButton = document.getElementById('toggleChatPanel');
+const adminChatPanel = document.getElementById('adminChatPanel');
+const chatPhone = document.getElementById('chatPhone');
+const startChatSessionButton = document.getElementById('startChatSession');
+const chatSessionBadge = document.getElementById('chatSessionBadge');
+const chatLog = document.getElementById('chatLog');
+const chatMessage = document.getElementById('chatMessage');
+const sendChatMessageButton = document.getElementById('sendChatMessage');
+const chatStatus = document.getElementById('chatStatus');
 
 function setStatus(element, message, type = '') {
   element.textContent = message;
@@ -27,6 +38,90 @@ function formatDate(value) {
     return 'Never';
   }
   return new Date(value).toLocaleString();
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function toggleChatPanel(forceOpen) {
+  state.isChatOpen = typeof forceOpen === 'boolean' ? forceOpen : !state.isChatOpen;
+  adminChatPanel.hidden = !state.isChatOpen;
+  toggleChatPanelButton.textContent = state.isChatOpen ? 'Hide Chat' : 'Open Chat';
+  toggleChatPanelButton.setAttribute('aria-expanded', String(state.isChatOpen));
+}
+
+function renderChatEmptyState() {
+  chatLog.innerHTML = '<div class="chat-empty">Start a session to send messages with the existing chat backend.</div>';
+}
+
+function appendChatMessage(role, message) {
+  if (chatLog.querySelector('.chat-empty')) {
+    chatLog.innerHTML = '';
+  }
+  const item = document.createElement('div');
+  item.className = `chat-message ${role}`;
+  item.innerHTML = `<span>${role === 'user' ? 'You' : 'Assistant'}</span><p>${escapeHtml(message)}</p>`;
+  chatLog.appendChild(item);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function setChatSession(phone) {
+  state.chatPhone = phone;
+  chatPhone.value = phone;
+  chatSessionBadge.textContent = phone ? `Session ${phone}` : 'Session not started';
+}
+
+function startChatSession() {
+  const phone = chatPhone.value.trim();
+  if (!phone) {
+    setStatus(chatStatus, 'Enter a phone number to start the chat session.', 'error');
+    return;
+  }
+  setChatSession(phone);
+  renderChatEmptyState();
+  setStatus(chatStatus, `Chat session ready for ${phone}.`, 'success');
+}
+
+async function sendChatMessage() {
+  const phone = state.chatPhone || chatPhone.value.trim();
+  const message = chatMessage.value.trim();
+  if (!phone) {
+    setStatus(chatStatus, 'Start a chat session first.', 'error');
+    return;
+  }
+  if (!message) {
+    setStatus(chatStatus, 'Type a message before sending.', 'error');
+    return;
+  }
+
+  setChatSession(phone);
+  appendChatMessage('user', message);
+  chatMessage.value = '';
+  setStatus(chatStatus, 'Waiting for assistant response...');
+
+  try {
+    const response = await apiFetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, ask: message }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setStatus(chatStatus, data.detail || 'Unable to send chat message.', 'error');
+      return;
+    }
+    appendChatMessage('assistant', data.answer || 'No response received.');
+    setStatus(chatStatus, 'Response received.', 'success');
+  } catch (error) {
+    console.error(error);
+    setStatus(chatStatus, 'Unable to reach the chat service.', 'error');
+  }
 }
 
 async function apiFetch(url, options) {
@@ -213,6 +308,17 @@ document.getElementById('uploadDocument').addEventListener('click', uploadDocume
 document.getElementById('saveDocument').addEventListener('click', saveDocument);
 document.getElementById('deleteDocument').addEventListener('click', deleteDocument);
 document.getElementById('refreshKnowledgeBase').addEventListener('click', refreshKnowledgeBase);
+toggleChatPanelButton.addEventListener('click', () => toggleChatPanel());
+startChatSessionButton.addEventListener('click', startChatSession);
+sendChatMessageButton.addEventListener('click', sendChatMessage);
+chatMessage.addEventListener('keydown', (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+    event.preventDefault();
+    sendChatMessage();
+  }
+});
+
+toggleChatPanel(false);
 
 Promise.all([loadPrompts(), loadKnowledgeBase()]).catch((error) => {
   console.error(error);

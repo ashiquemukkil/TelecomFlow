@@ -14,9 +14,12 @@
         <p>Update the live prompt files and maintain the source documents behind retrieval without editing Python code or shipping a new deployment.</p>
       </div>
       <div class="hero-side">
-        <form class="logout-form" method="post" action="/admin/logout">
-          <button class="secondary" type="submit">Log Out</button>
-        </form>
+        <div class="hero-actions">
+          <button class="secondary" id="toggleChatPanel" type="button" aria-expanded="false" aria-controls="adminChatPanel">Open Chat</button>
+          <form class="logout-form" method="post" action="/admin/logout">
+            <button class="secondary" type="submit">Log Out</button>
+          </form>
+        </div>
         <div class="status-grid">
           <div class="status-card">
             <span>Prompt Files</span>
@@ -32,6 +35,33 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <section class="panel chat-panel" id="adminChatPanel" hidden>
+      <div class="panel-header chat-panel-header">
+        <div>
+          <h2>Admin Chat</h2>
+          <p>Use the same backend chat flow as the public UI. Enter a phone number once, then continue the conversation here.</p>
+        </div>
+        <span class="badge" id="chatSessionBadge">Session not started</span>
+      </div>
+
+      <div class="chat-controls">
+        <input type="text" id="chatPhone" placeholder="Phone number" />
+        <button class="secondary" id="startChatSession" type="button">Start Session</button>
+      </div>
+
+      <div class="chat-log" id="chatLog" aria-live="polite">
+        <div class="chat-empty">Start a session to send messages with the existing chat backend.</div>
+      </div>
+
+      <div class="chat-compose">
+        <textarea id="chatMessage" placeholder="Type a message" rows="4"></textarea>
+        <div class="actions">
+          <button class="primary" id="sendChatMessage" type="button">Send</button>
+        </div>
+      </div>
+      <div class="status-line" id="chatStatus"></div>
     </section>
 
     <div class="grid">

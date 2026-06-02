@@ -17,6 +17,10 @@
 
 * { box-sizing: border-box; }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: var(--font);
@@ -97,6 +101,13 @@ h2 { font-size: 1.15rem; }
   justify-items: end;
 }
 
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .status-card {
   background: var(--surface-strong);
   border: 1px solid var(--border);
@@ -122,6 +133,72 @@ h2 { font-size: 1.15rem; }
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   gap: 20px;
+}
+
+.chat-panel {
+  padding: 22px;
+}
+
+.chat-panel-header {
+  align-items: flex-start;
+}
+
+.chat-controls,
+.chat-compose {
+  display: grid;
+  gap: 12px;
+}
+
+.chat-controls {
+  grid-template-columns: minmax(0, 280px) auto;
+  align-items: center;
+}
+
+.chat-log {
+  min-height: 280px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+  display: grid;
+  gap: 12px;
+}
+
+.chat-empty {
+  color: var(--muted);
+}
+
+.chat-message {
+  max-width: min(720px, 100%);
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+}
+
+.chat-message.user {
+  margin-left: auto;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.16), rgba(201, 239, 231, 0.7));
+}
+
+.chat-message.assistant {
+  margin-right: auto;
+}
+
+.chat-message span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chat-message p {
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 .panel {
@@ -256,6 +333,48 @@ button.danger { background: rgba(185, 28, 28, 0.12); color: var(--danger); }
   min-height: 24px;
   color: var(--muted);
   font-size: 0.94rem;
+}
+
+.status-line.success {
+  color: var(--accent-strong);
+}
+
+.status-line.error {
+  color: var(--danger);
+}
+
+@media (max-width: 1040px) {
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero-side {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+  }
+
+  .status-grid,
+  .grid,
+  .split,
+  .chat-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 20px, 100%);
+    margin: 10px auto 20px;
+  }
+
+  .hero,
+  .panel {
+    padding: 18px;
+  }
 }
 
 .status-line.error { color: var(--danger); }
