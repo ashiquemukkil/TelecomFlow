@@ -17,17 +17,25 @@ class ChatRequest(BaseModel):
     ask: str
     history: Optional[List[str]] = None
 
+class UserData(BaseModel):
+    traveler_type: Optional[str] = None # family/couple/friends/bachelor_group/solo
+    trip_type: Optional[str] = None # group/private/customized
+    number_of_travelers: Optional[str] = None
+    travel_dates: Optional[str] = None
+
 class ChatResponse(BaseModel):
     id: str
     answer: str
     is_allowed: Optional[bool] = True
+    is_data_changed: Optional[bool] = False
+    user_data: Optional[UserData] = None
 
 @app.post("/chat", response_model=ChatResponse, include_in_schema=False)
 async def create_item(chat: ChatRequest):
-    response, is_agent_required = await run(chat.phone, chat.ask)
+    response, is_agent_required, data, is_data_changed = await run(chat.phone, chat.ask)
     logging.info(f"Response for phone {chat.phone}: {response}, Agent required: {is_agent_required}")
-    
-    return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required)
+    user_data = UserData(**data) if data else None
+    return ChatResponse(id=chat.phone, answer=response, is_allowed=not is_agent_required, is_data_changed=is_data_changed, user_data=user_data)
     # return ChatResponse(id=chat.phone, answer=response, is_allowed=False)
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 {
     "schema": 1,
-    "description": "Given a long conversation transcript, summarize the conversation",
+    "description": "generate a summary of conversation history,language detection, and user data extraction",
     "execution_settings": {
       "default": {
         "max_tokens": 1024,
@@ -10,18 +10,37 @@
         "frequency_penalty": 0.0
       }
     },
+    "output_variable": {
+      "description": "JSON object with summary, language, and user_data fields",
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "summary": { "type": "string" },
+          "language": { "type": "string" },
+          "user_data": { "type": "object" },
+          "is_user_data_changed": { "type": "boolean" }
+        },
+        "required": ["summary", "language", "user_data", "is_user_data_changed"]
+      }
+    },
     "input_variables": [
       {
-        "name": "language",
-        "description": "The generated summary language.",
-        "defaultValue": "English",
-        "required": true	
+          "name": "ask",
+          "description": "User ask(i.e., How do I execute task A?)",
+          "defaultValue": "",
+          "required": true	
       },
       {
         "name": "history",
         "description": "A long conversation transcript.",
         "defaultValue": "",
         "required": true	
+      },
+       {
+          "name": "user_data",
+          "description": "Already known user data.",
+          "defaultValue": "",
+          "required": false
       }
     ]
   }

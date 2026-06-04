@@ -36,7 +36,6 @@ async def call_semantic_function(kernel, function, arguments):
     return function_result
 
 async def get_answer(query: str, history: list, conv_id: str,user_data: dict) -> str:
-    user_data = user_data or {}
 
     if user_data.get("waiting_for_agent") == True:
         return "Please wait, An agent will get back to you soon.", True, user_data, False
@@ -53,22 +52,23 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
     arguments["user_data"] = str(user_data)
     is_agent_required = False
     is_user_data_changed = False
-    # import RAG plugins
+    
     conversationPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Conversations")))
     retrievalPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Retrieval")))
     
     conversationPlugin= await conversationPluginTask
 
-    function_result = await call_semantic_function(kernel, conversationPlugin["Language"], arguments)
-    detected_language = str(function_result)
-    arguments["language"] = detected_language
-
-    if history != []:
-        function_result = await call_semantic_function(kernel, conversationPlugin["ConversationSummary"], arguments)
-        conversation_history_summary =  str(function_result)
-    else:
-        conversation_history_summary =  ""
-    arguments["conversation_summary"] = conversation_history_summary
+    function_result = await call_semantic_function(kernel, conversationPlugin["ConversationSummary"], arguments)
+    try:
+        response = str(function_result).strip("`json\n`")
+        conversation_processed_data =  json.loads(response)
+    except json.JSONDecodeError:
+        raise Exception(f"ConversationSummary was not successful due to a JSON error. Invalid json: {function_result}")
+    arguments["conversation_summary"] = conversation_processed_data.get("summary", "")
+    arguments["language"] = conversation_processed_data.get("language", "English")
+    arguments["user_data"] = str(conversation_processed_data.get("user_data", {}))
+    is_user_data_changed = conversation_processed_data.get("is_user_data_changed", False)
+    user_data = conversation_processed_data.get("user_data", user_data)
 
     function_result =  await call_semantic_function(kernel, conversationPlugin["Triage"], arguments)
     triage_result = str(function_result)    
@@ -81,19 +81,6 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
     
     intents = triage_dict.get("intents", [])
     if set(intents).intersection({"follow_up", "question_answering"}):
-        if not user_data.get("traveling_date") or not user_data.get("traveling_from") or not user_data.get("number_of_people"):
-            arguments["user_data"] = str(user_data)
-            is_user_data_changed = True
-            function_result = await call_semantic_function(kernel, conversationPlugin["CollectData"], arguments)
-            function_result = str(function_result)    
-            try:
-                response = function_result.strip("`json\n`")
-                collected_data_dict = json.loads(response)
-                user_data = collected_data_dict
-                if user_data.get("question"):
-                    return user_data["question"], False, user_data, True
-            except json.JSONDecodeError:
-                raise Exception(f"CollectData was not successful due to a JSON error. Invalid json: {function_result}")
         answer = triage_dict['answer']
         retrievalPlugin= await retrievalPluginTask
        
