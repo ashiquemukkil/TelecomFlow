@@ -51,7 +51,7 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
     arguments["previous_answer"] = history[-2]['content'] if len(history) > 1 else ""
     arguments["user_data"] = str(user_data)
     is_agent_required = False
-    is_user_data_changed = False
+    is_user_data_changed = 0
     
     conversationPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Conversations")))
     retrievalPluginTask = asyncio.create_task(asyncio.to_thread(kernel.add_plugin, KernelPlugin.from_directory(parent_directory=PLUGINS_FOLDER,plugin_name="Retrieval")))
@@ -67,7 +67,7 @@ async def get_answer(query: str, history: list, conv_id: str,user_data: dict) ->
     arguments["conversation_summary"] = conversation_processed_data.get("summary", "")
     arguments["language"] = conversation_processed_data.get("language", "English")
     arguments["user_data"] = str(conversation_processed_data.get("user_data", {}))
-    is_user_data_changed = conversation_processed_data.get("is_user_data_changed", False)
+    is_user_data_changed = conversation_processed_data.get("is_user_data_changed", 0)
     user_data = conversation_processed_data.get("user_data", user_data)
 
     function_result =  await call_semantic_function(kernel, conversationPlugin["Triage"], arguments)

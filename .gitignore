@@ -1,1 +1,3 @@
-.ven/
+.venv/
+helper
+**/__pycache__/

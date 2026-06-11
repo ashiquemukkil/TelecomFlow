@@ -27,7 +27,7 @@ class ChatResponse(BaseModel):
     id: str
     answer: str
     is_allowed: Optional[bool] = True
-    is_data_changed: Optional[bool] = False
+    is_data_changed: Optional[int] = 0
     user_data: Optional[UserData] = None
 
 @app.post("/chat", response_model=ChatResponse, include_in_schema=False)

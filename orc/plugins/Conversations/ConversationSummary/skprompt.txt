@@ -4,7 +4,7 @@ Analyze the conversation provided in the 'CONVERSATION_HISTORY', 'ASK' section a
 - `summary`: A concise summary of the conversation history only. Do not include, reference, or summarize the current user query (`ASK`).
 - `language`: The primary language used by the user throughout the conversation.
 - `user_data`: An updated version of the provided `USER_DATA`, enriched with any additional user information explicitly mentioned in the conversation history. Update existing fields when newer information is available. Do not infer or fabricate information that is not clearly stated.
-- `is_user_data_changed`: set True if user_data updated or keep False
+- `is_user_data_changed`: set 1 if user_data updated or keep 0
 
 ## TASK INSTRUCTIONS
 * Do not include the current user query (`ASK`) in the summary.
