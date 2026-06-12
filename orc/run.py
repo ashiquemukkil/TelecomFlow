@@ -37,8 +37,8 @@ async def call_semantic_function(kernel, function, arguments):
 
 async def get_answer(query: str, history: list, conv_id: str,user_data: dict) -> str:
 
-    if user_data.get("waiting_for_agent") == True:
-        return "Please wait, An agent will get back to you soon.", True, user_data, False
+    # if user_data.get("waiting_for_agent") == True:
+    #     return "Please wait, An agent will get back to you soon.", True, user_data, False
    
     bot_description = open(BOT_DESCRIPTION_FILE, "r").read()
 
